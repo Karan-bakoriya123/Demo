@@ -46,11 +46,16 @@ const IoTDashboard = ({ farmId }) => {
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <FiDroplet className="text-blue-500" size={20} />
-          Live Irrigation System
-        </h3>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <FiDroplet className="text-blue-500" size={20} />
+            Live Irrigation System
+          </h3>
+          <p className="text-[10px] font-mono text-gray-400 mt-1 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 inline-block">
+            ID: {farmId}
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <span className="relative flex h-3 w-3">
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${status ? 'bg-green-400' : 'bg-gray-400'}`}></span>
