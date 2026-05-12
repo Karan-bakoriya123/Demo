@@ -1,0 +1,187 @@
+import React, { useState, useEffect, useRef } from 'react';
+import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
+import api from '../api/axios';
+import toast from 'react-hot-toast';
+import { FiSend, FiRefreshCw } from 'react-icons/fi';
+import { GiPlantRoots } from 'react-icons/gi';
+
+const Slider = ({ name, label, min, max, step = 1, unit, form, handleSlider }) => {
+  const pct = ((form[name] - min) / (max - min)) * 100;
+  return (
+    <div>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="text-gray-500 font-medium">{label}</span>
+        <span className="font-bold text-green-700">{form[name]}{unit}</span>
+      </div>
+      <input type="range" name={name} min={min} max={max} step={step} value={form[name]} onChange={handleSlider}
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+        style={{ background: `linear-gradient(to right, #16a34a ${pct}%, #e5e7eb ${pct}%)` }} />
+    </div>
+  );
+};
+
+const Assistant = () => {
+  const [farms, setFarms] = useState([]);
+  const [selectedFarm, setSelectedFarm] = useState(null);
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: 'Hello! I am your Smart Agri AI Assistant. 🌱 You can either use the sliders to analyze your farm data or just type your question below.' },
+  ]);
+  const [form, setForm] = useState({ soilMoisture: 40, soilPH: 6.5, temperature: 28, humidity: 60, rainChance: 20, fieldSize: 5 });
+  const [userInput, setUserInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(true);
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    api.get('/farms').then(({ data }) => {
+      setFarms(data);
+      if (data.length > 0) setSelectedFarm(data[0]);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSlider = (e) => setForm({ ...form, [e.target.name]: Number(e.target.value) });
+
+  const handleAnalyze = async (e) => {
+    if (e) e.preventDefault();
+    if (!selectedFarm && !userInput) return toast.error('Please select a farm or type a question');
+    
+    setLoading(true);
+    let queryText = userInput;
+    
+    if (!queryText) {
+      queryText = `Analyze my ${selectedFarm?.cropType || 'crop'}: Moisture ${form.soilMoisture}%, pH ${form.soilPH}, Temp ${form.temperature}°C.`;
+    }
+
+    setMessages((prev) => [...prev, { role: 'user', text: queryText }]);
+    setUserInput('');
+    setShowForm(false);
+
+    try {
+      const { data } = await api.post('/assistant/analyze', {
+        cropType: selectedFarm?.cropType || 'Wheat',
+        fieldSize: selectedFarm?.fieldSize || 5,
+        ...form,
+        text: queryText
+      });
+      setMessages((prev) => [...prev, { role: 'assistant', text: data.message }]);
+    } catch (err) {
+      setMessages((prev) => [...prev, { role: 'assistant', text: 'I am here to help! Please provide your soil and weather details for a specific analysis.' }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setMessages([{ role: 'assistant', text: 'Hello! I am your Smart Agri AI Assistant. 🌱 How can I help you today?' }]);
+    setShowForm(true);
+    setUserInput('');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="flex pt-16">
+        <aside className="hidden lg:flex flex-col w-64 fixed left-0 top-16 bottom-0 bg-white border-r border-gray-100 shadow-sm">
+          <Sidebar />
+        </aside>
+        <main className="flex-1 lg:ml-64 p-6">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="page-title">AI Farming Assistant</h1>
+                <p className="page-subtitle">Get personalized farming advice based on your data.</p>
+              </div>
+              <button onClick={handleReset} className="btn-secondary flex items-center gap-2 text-sm">
+                <FiRefreshCw className="w-4 h-4" /> Reset Chat
+              </button>
+            </div>
+
+            {/* Farm selector */}
+            {farms.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-4">
+                {farms.map((f) => (
+                  <button key={f._id} onClick={() => setSelectedFarm(f)}
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${selectedFarm?._id === f._id ? 'bg-green-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-green-300'}`}>
+                    {f.farmName}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Chat window */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col" style={{ height: '65vh' }}>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+                {messages.map((msg, i) => (
+                  <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    {msg.role === 'assistant' && (
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <GiPlantRoots className="w-4 h-4 text-green-600" />
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-green-600 text-white rounded-tr-sm'
+                        : 'bg-gray-50 border border-gray-100 text-gray-700 rounded-tl-sm'
+                    }`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                {loading && (
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <GiPlantRoots className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div className="bg-gray-50 border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
+
+              {/* Input section */}
+              <div className="border-t border-gray-100 p-4 space-y-3 bg-gray-50 rounded-b-2xl">
+                {showForm && (
+                  <div className="grid grid-cols-2 gap-3 mb-2 animate-fade-in">
+                    <Slider name="soilMoisture" label="Soil Moisture" min={0} max={100} unit="%" form={form} handleSlider={handleSlider} />
+                    <Slider name="soilPH" label="Soil pH" min={0} max={14} step={0.1} unit="" form={form} handleSlider={handleSlider} />
+                    <Slider name="temperature" label="Temperature" min={-10} max={50} unit="°C" form={form} handleSlider={handleSlider} />
+                    <Slider name="humidity" label="Humidity" min={0} max={100} unit="%" form={form} handleSlider={handleSlider} />
+                  </div>
+                )}
+                
+                <form onSubmit={handleAnalyze} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    placeholder={showForm ? "Or type your question here..." : "Type your question..."}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all outline-none text-sm"
+                  />
+                  <button type="submit" disabled={loading || (!userInput && !showForm)} className="btn-primary flex items-center justify-center px-4">
+                    <FiSend className="w-4 h-4" />
+                  </button>
+                  {!showForm && (
+                    <button type="button" onClick={() => setShowForm(true)} className="btn-secondary px-4 text-xs">
+                      Data
+                    </button>
+                  )}
+                </form>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default Assistant;
