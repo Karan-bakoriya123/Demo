@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 const scannerRoutes = require('./routes/scannerRoutes');
 const cropMonitorRoutes = require('./routes/cropMonitorRoutes');
+const iotRoutes = require('./routes/iotRoutes');
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/crop-monitor', cropMonitorRoutes);
+app.use('/api/iot', iotRoutes);
 
 // Health check
 app.get('/', (req, res) => {

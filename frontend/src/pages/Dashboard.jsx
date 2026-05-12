@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import Card from '../components/Card';
+import IoTDashboard from '../components/IoTDashboard';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -249,7 +250,11 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* IoT Live Dashboard */}
+              <IoTDashboard farmId={selectedFarm?._id} />
+
               {/* Weather + Irrigation Row */}
+
               <div className="grid lg:grid-cols-2 gap-6">
                 {/* Weather Card */}
                 <Card title="Weather Summary" icon={FiCloud} subtitle={weather?.location}>
