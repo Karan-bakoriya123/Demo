@@ -20,17 +20,21 @@ dotenv.config();
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Middleware (CORS first)
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Middleware
-app.use(cors()); // Allow all origins for debugging and deployment
+// Request Logger
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Non-blocking DB Connection
+connectDB().then(() => {
+  seedAdmin().catch(err => console.error('Seed error:', err));
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -44,28 +48,11 @@ app.use('/api/scanner', scannerRoutes);
 app.use('/api/crop-monitor', cropMonitorRoutes);
 app.use('/api/iot', iotRoutes);
 
-// Health check
 app.get('/', (req, res) => {
-  res.json({ message: '🌱 Smart Agri AI Assistant API is running!', version: '1.0.0' });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    message: err.message || 'Internal Server Error',
-  });
+  res.json({ message: '🌱 API is Live!', version: '1.2.0' });
 });
 
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, async () => {
-  console.log(`\n🚀 Server running on port ${PORT}`);
-  console.log(`📡 API: http://localhost:${PORT}`);
-  await seedAdmin();
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
