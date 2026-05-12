@@ -12,7 +12,7 @@ const IoTDashboard = ({ farmId }) => {
 
     const fetchStatus = async () => {
       try {
-        const response = await axios.get(`/api/iot/${farmId}`);
+        const response = await axios.get(`/iot/${farmId}`);
         if (response.data.success) {
           setStatus(response.data.data);
           setError(null);
