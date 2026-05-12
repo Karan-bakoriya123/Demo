@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import Card from '../components/Card';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import toast from 'react-hot-toast';
 import {
   FiCloud, FiDroplet, FiSearch, FiRefreshCw, FiAlertTriangle,
@@ -35,6 +36,7 @@ const CircularProgress = ({ percentage, size = 140, strokeWidth = 10, color }) =
 
 // ─── Alert Banner ───
 const AlertBanner = ({ alertLevel, alertMessage, alertMessageHi, onPlayAlarm, isMuted, toggleMute }) => {
+  const { t } = useLanguage();
   const config = {
     danger: {
       bg: 'bg-gradient-to-r from-red-600 to-red-500',
@@ -77,8 +79,7 @@ const AlertBanner = ({ alertLevel, alertMessage, alertMessageHi, onPlayAlarm, is
           </div>
           <div>
             <div className="text-xs font-bold tracking-wider opacity-90 mb-1">{c.label}</div>
-            <p className="font-bold text-lg leading-snug">{alertMessageHi}</p>
-            <p className="text-sm opacity-80 mt-1">{alertMessage}</p>
+            <p className="font-bold text-lg leading-snug">{t(alertMessageHi, alertMessage)}</p>
           </div>
         </div>
         <button
@@ -123,6 +124,7 @@ const HourlyBar = ({ hour, probability, isCurrentHour }) => {
 // ─── Main Page ───
 const RainAlert = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState('');
@@ -205,9 +207,9 @@ const RainAlert = () => {
             {/* Header */}
             <div className="mb-6">
               <h1 className="page-title flex items-center gap-2">
-                🌧️ Rain Alert — Barish Prediction
+                🌧️ {t("बारिश अलर्ट — Rain Alert", "Rain Alert")}
               </h1>
-              <p className="page-subtitle">Real-time rain prediction aur kisan ke liye alert system.</p>
+              <p className="page-subtitle">{t("रियल-टाइम बारिश भविष्यवाणी और किसानों के लिए अलर्ट सिस्टम।", "Real-time rain prediction and alert system for farmers.")}</p>
             </div>
 
             {/* Search */}
@@ -219,12 +221,12 @@ const RainAlert = () => {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="input-field pl-10"
-                  placeholder="City ya village ka naam likho..."
+                  placeholder={t("शहर या गाँव का नाम लिखें...", "Enter city or village name...")}
                 />
               </div>
               <button type="submit" id="rain-alert-search-btn" disabled={loading} className="btn-primary flex items-center gap-2">
                 {loading ? <div className="spinner w-4 h-4" /> : <FiSearch className="w-4 h-4" />}
-                Search
+                {t("खोजें", "Search")}
               </button>
               <button type="button" onClick={() => fetchRainData(location)} className="btn-secondary p-3" id="rain-alert-refresh-btn">
                 <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -234,7 +236,7 @@ const RainAlert = () => {
             {loading && (
               <div className="flex flex-col items-center justify-center py-20">
                 <div className="spinner w-12 h-12" />
-                <p className="text-gray-500 mt-4 font-medium">Barish ka data fetch ho raha hai...</p>
+                <p className="text-gray-500 mt-4 font-medium">{t("बारिश का डेटा लोड हो रहा है...", "Fetching rain data...")}</p>
               </div>
             )}
 
@@ -256,7 +258,7 @@ const RainAlert = () => {
                   <Card>
                     <div className="flex items-center gap-2 mb-4">
                       <FiDroplet className="w-5 h-5 text-blue-500" />
-                      <h3 className="font-display font-bold text-gray-900">Aaj Ki Barish</h3>
+                      <h3 className="font-display font-bold text-gray-900">{t("आज की बारिश", "Today's Rain")}</h3>
                       <span className="text-xs text-gray-400 ml-auto">{data.location}</span>
                     </div>
                     <div className="flex items-center gap-6">
@@ -267,7 +269,7 @@ const RainAlert = () => {
                         />
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <span className="text-3xl font-display font-extrabold text-gray-900">{data.todayRain.probability}%</span>
-                          <span className="text-xs text-gray-500">aaj ka max</span>
+                          <span className="text-xs text-gray-500">{t("आज का max", "today max")}</span>
                         </div>
                       </div>
                       <div className="flex-1 space-y-3">
@@ -279,9 +281,9 @@ const RainAlert = () => {
                               ? 'bg-amber-100 text-amber-700'
                               : 'bg-green-100 text-green-700'
                         }`}>
-                          {data.todayRain.rainStatus === 'coming_soon' && '🌧️ Barish Abhi Aayegi'}
-                          {data.todayRain.rainStatus === 'rained_already' && '✅ Barish Ho Chuki'}
-                          {data.todayRain.rainStatus === 'not_expected' && '☀️ Barish Nahi Hogi'}
+                          {data.todayRain.rainStatus === 'coming_soon' && t('🌧️ बारिश अभी आएगी', '🌧️ Rain Coming Soon')}
+                          {data.todayRain.rainStatus === 'rained_already' && t('✅ बारिश हो चुकी', '✅ Rained Already')}
+                          {data.todayRain.rainStatus === 'not_expected' && t('☀️ बारिश नहीं होगी', '☀️ No Rain Expected')}
                         </div>
 
                         {/* Details based on status */}
@@ -289,11 +291,11 @@ const RainAlert = () => {
                           <>
                             <div className="flex items-center gap-2 text-sm">
                               <FiClock className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">Expected: <strong className="text-gray-900">{data.todayRain.expectedTime}</strong></span>
+                              <span className="text-gray-600">{t("Expected:", "Expected:")} <strong className="text-gray-900">{data.todayRain.expectedTime}</strong></span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                               <FiDroplet className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">Baaki ghanto mein: <strong className="text-blue-600">{data.todayRain.remainingProbability}% chance</strong></span>
+                              <span className="text-gray-600">{t("बाकी घंटों में:", "In remaining hours:")} <strong className="text-blue-600">{data.todayRain.remainingProbability}% {t("chance", "chance")}</strong></span>
                             </div>
                           </>
                         )}
@@ -301,23 +303,23 @@ const RainAlert = () => {
                           <>
                             <div className="flex items-center gap-2 text-sm">
                               <FiDroplet className="w-4 h-4 text-blue-400" />
-                              <span className="text-gray-600">Ho chuki: <strong className="text-amber-700">{data.todayRain.pastPrecipitation}mm</strong></span>
+                              <span className="text-gray-600">{t("हो चुकी:", "Rained:")} <strong className="text-amber-700">{data.todayRain.pastPrecipitation}mm</strong></span>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                               <FiClock className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">Time: <strong className="text-gray-900">{data.todayRain.expectedTime}</strong></span>
+                              <span className="text-gray-600">{t("समय:", "Time:")} <strong className="text-gray-900">{data.todayRain.expectedTime}</strong></span>
                             </div>
-                            <div className="text-xs text-green-600 font-medium">Ab aur barish nahi hogi ✓</div>
+                            <div className="text-xs text-green-600 font-medium">{t("अब और बारिश नहीं होगी ✓", "No more rain today ✓")}</div>
                           </>
                         )}
                         {data.todayRain.rainStatus === 'not_expected' && (
-                          <div className="text-sm text-gray-500">Aaj poore din barish ki koi sambhavna nahi hai.</div>
+                          <div className="text-sm text-gray-500">{t("आज पूरे दिन बारिश की कोई संभावना नहीं है।", "No rain expected for the rest of the day.")}</div>
                         )}
 
                         {/* Total precip */}
                         {data.todayRain.totalPrecipitation > 0 && (
                           <div className="text-xs text-gray-400">
-                            Total: {data.todayRain.totalPrecipitation} mm ({data.todayRain.intensity === 'none' ? 'negligible' : data.todayRain.intensity})
+                            {t("कुल:", "Total:")} {data.todayRain.totalPrecipitation} mm ({data.todayRain.intensity === 'none' ? t('नगण्य', 'negligible') : data.todayRain.intensity})
                           </div>
                         )}
                       </div>
@@ -328,7 +330,7 @@ const RainAlert = () => {
                   <Card>
                     <div className="flex items-center gap-2 mb-4">
                       <FiCalendar className="w-5 h-5 text-purple-500" />
-                      <h3 className="font-display font-bold text-gray-900">Agla Barish Kab?</h3>
+                      <h3 className="font-display font-bold text-gray-900">{t("अगली बारिश कब?", "Next Rain When?")}</h3>
                     </div>
                     {data.nextRainIn ? (
                       <div className="text-center py-4">
@@ -343,22 +345,22 @@ const RainAlert = () => {
                                   : 'bg-gradient-to-br from-sky-400 to-blue-500'
                           } text-white shadow-lg`}>
                             <span className="text-3xl font-display font-extrabold">
-                              {data.nextRainIn.days === 0 ? 'आज' : data.nextRainIn.days === 1 ? 'कल' : data.nextRainIn.days}
+                              {data.nextRainIn.days === 0 ? t('आज', 'Today') : data.nextRainIn.days === 1 ? t('कल', 'Tmrw') : data.nextRainIn.days}
                             </span>
                             {data.nextRainIn.days > 1 && (
-                              <span className="text-xs font-medium opacity-90">Din Mein</span>
+                              <span className="text-xs font-medium opacity-90">{t("दिन में", "Days")}</span>
                             )}
                           </div>
                         </div>
                         <p className="text-lg font-bold text-gray-900 mt-4">
                           {data.nextRainIn.days === 0
-                            ? '🌧️ Aaj Barish Aayegi!'
+                            ? t('🌧️ आज बारिश आएगी!', '🌧️ Rain Today!')
                             : data.nextRainIn.days === 1
-                              ? '🌧️ Kal Barish Aayegi!'
-                              : `🌧️ ${data.nextRainIn.days} Din Mein Barish`}
+                              ? t('🌧️ कल बारिश आएगी!', '🌧️ Rain Tomorrow!')
+                              : t(`🌧️ ${data.nextRainIn.days} दिन में बारिश`, `🌧️ Rain in ${data.nextRainIn.days} Days`)}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
-                          {data.nextRainIn.dayHi}, {data.nextRainIn.date} — {data.nextRainIn.probability}% chance
+                          {t(data.nextRainIn.dayHi, data.nextRainIn.date)}, {data.nextRainIn.date} — {data.nextRainIn.probability}% {t("chance", "chance")}
                         </p>
                       </div>
                     ) : (
@@ -366,8 +368,8 @@ const RainAlert = () => {
                         <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
                           <span className="text-3xl">☀️</span>
                         </div>
-                        <p className="font-bold text-gray-900">Agle 7 din barish nahi</p>
-                        <p className="text-sm text-gray-500 mt-1">Coming week mein koi barish expected nahi hai</p>
+                        <p className="font-bold text-gray-900">{t("अगले 7 दिन बारिश नहीं", "No rain in next 7 days")}</p>
+                        <p className="text-sm text-gray-500 mt-1">{t("आने वाले हफ्ते में कोई बारिश की संभावना नहीं है", "No rain expected in the coming week")}</p>
                       </div>
                     )}
                   </Card>
@@ -378,7 +380,7 @@ const RainAlert = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <FiClock className="w-5 h-5 text-sky-500" />
-                      <h3 className="font-display font-bold text-gray-900">Aaj Ka Hourly Rain Chart</h3>
+                      <h3 className="font-display font-bold text-gray-900">{t("आज का Hourly बारिश चार्ट", "Today's Hourly Rain Chart")}</h3>
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-gray-400">
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" />70%+</span>
@@ -404,7 +406,7 @@ const RainAlert = () => {
                 <Card>
                   <div className="flex items-center gap-2 mb-5">
                     <FiCalendar className="w-5 h-5 text-indigo-500" />
-                    <h3 className="font-display font-bold text-gray-900">7-Din Ka Barish Forecast</h3>
+                    <h3 className="font-display font-bold text-gray-900">{t("7-दिन का बारिश पूर्वानुमान", "7-Day Rain Forecast")}</h3>
                   </div>
                   <div className="space-y-3">
                     {data.dailyForecast.map((day, i) => (
@@ -418,7 +420,7 @@ const RainAlert = () => {
                       >
                         <div className="w-16 flex-shrink-0">
                           <div className="text-sm font-bold text-gray-900">
-                            {i === 0 ? 'Aaj' : i === 1 ? 'Kal' : day.dayHi.slice(0, 3)}
+                            {i === 0 ? t('आज', 'Today') : i === 1 ? t('कल', 'Tmrw') : t(day.dayHi.slice(0, 3), day.dateFormatted.split(' ')[0])}
                           </div>
                           <div className="text-xs text-gray-400">{day.dateFormatted}</div>
                         </div>
@@ -451,7 +453,7 @@ const RainAlert = () => {
                           </div>
                         </div>
                         {day.isRainDay && (
-                          <span className="badge-blue text-[10px] flex-shrink-0">BARISH</span>
+                          <span className="badge-blue text-[10px] flex-shrink-0">{t("बारिश", "RAIN")}</span>
                         )}
                       </div>
                     ))}
@@ -462,7 +464,7 @@ const RainAlert = () => {
                 <Card>
                   <div className="flex items-center gap-2 mb-4">
                     <FiShield className="w-5 h-5 text-green-500" />
-                    <h3 className="font-display font-bold text-gray-900">Kisan Advisory — Farming Advice</h3>
+                    <h3 className="font-display font-bold text-gray-900">{t("किसान एडवाइजरी — Farming Advice", "Farming Advisory")}</h3>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     {data.farmingAdvice.map((adv, i) => (
@@ -476,8 +478,7 @@ const RainAlert = () => {
                           'bg-purple-50 border-purple-100'
                         }`}
                       >
-                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{adv.text}</p>
-                        <p className="text-xs text-gray-500 mt-1">{adv.textEn}</p>
+                        <p className="text-sm font-medium text-gray-800 leading-relaxed">{t(adv.text, adv.textEn || adv.text)}</p>
                       </div>
                     ))}
                   </div>
@@ -485,9 +486,9 @@ const RainAlert = () => {
 
                 {/* Footer link */}
                 <div className="text-center text-xs text-gray-400 py-4">
-                  Data powered by Open-Meteo • Auto-refreshes every 10 minutes
+                  Data powered by Open-Meteo • {t("हर 10 मिनट में ऑटो-रिफ्रेश", "Auto-refreshes every 10 minutes")}
                   <br />
-                  Last updated: {new Date(data.fetchedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  {t("अंतिम अपडेट:", "Last updated:")} {new Date(data.fetchedAt).toLocaleTimeString(t('hi-IN', 'en-IN'), { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             )}

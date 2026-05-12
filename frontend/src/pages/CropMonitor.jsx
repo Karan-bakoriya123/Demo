@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
 import { FiDroplet, FiCloud, FiThermometer, FiAlertTriangle, FiRefreshCw, FiBell, FiX, FiArrowRight, FiActivity, FiCalendar, FiWind } from "react-icons/fi";
 import { GiWheat, GiPlantRoots } from "react-icons/gi";
@@ -38,6 +39,7 @@ const TempColors = {
 
 const CropMonitor = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,10 +61,10 @@ const CropMonitor = () => {
         setAlertPopup(criticalDecision);
         setAlertShown(true);
         if (soundEnabled) playAlarm();
-        toast.error(criticalDecision.titleHi, { duration: 6000 });
+        toast.error(t(criticalDecision.titleHi, criticalDecision.titleEn), { duration: 6000 });
       }
     } catch {
-      if (!silent) toast.error("डेटा लोड नहीं हो सका।");
+      if (!silent) toast.error(t("डेटा लोड नहीं हो सका।", "Failed to load data."));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,7 +87,7 @@ const CropMonitor = () => {
     setAlertPopup(testDecision);
     setAlertShown(true);
     if (soundEnabled) playAlarm();
-    toast.error(testDecision.titleHi, { duration: 6000 });
+    toast.error(t(testDecision.titleHi, testDecision.titleEn), { duration: 6000 });
   };
 
   if (loading) return (
@@ -93,7 +95,7 @@ const CropMonitor = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <div className="spinner w-14 h-14" />
-          <p className="text-green-700 font-semibold text-lg">🌱 फसल डेटा लोड हो रहा है...</p>
+          <p className="text-green-700 font-semibold text-lg">{t("🌱 फसल डेटा लोड हो रहा है...", "🌱 Loading crop data...")}</p>
         </div>
       </div>
     </div>
@@ -106,9 +108,9 @@ const CropMonitor = () => {
         <main className="flex-1 lg:ml-64 p-6">
           <div className="card text-center py-20">
             <GiWheat className="w-16 h-16 text-green-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-700 mb-2">कोई खेत नहीं मिला</h2>
-            <p className="text-gray-500 mb-6">पहले एक खेत जोड़ें फिर यहाँ मॉनिटरिंग देखें।</p>
-            <Link to="/add-farm" className="btn-primary">+ खेत जोड़ें</Link>
+            <h2 className="text-xl font-bold text-gray-700 mb-2">{t("कोई खेत नहीं मिला", "No farm found")}</h2>
+            <p className="text-gray-500 mb-6">{t("पहले एक खेत जोड़ें फिर यहाँ मॉनिटरिंग देखें।", "Add a farm first to see monitoring here.")}</p>
+            <Link to="/add-farm" className="btn-primary">{t("+ खेत जोड़ें", "+ Add Farm")}</Link>
           </div>
         </main>
       </div>
@@ -130,9 +132,8 @@ const CropMonitor = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
             <div className="text-6xl text-center mb-4">{alertPopup.icon}</div>
-            <h2 className="text-2xl font-bold text-center text-red-600 mb-3">{alertPopup.titleHi}</h2>
-            <p className="text-center text-gray-600 mb-2">{alertPopup.messageHi}</p>
-            <p className="text-center text-gray-400 text-sm mb-6">{alertPopup.messageEn}</p>
+            <h2 className="text-2xl font-bold text-center text-red-600 mb-3">{t(alertPopup.titleHi, alertPopup.titleEn)}</h2>
+            <p className="text-center text-gray-600 mb-2">{t(alertPopup.messageHi, alertPopup.messageEn)}</p>
             <button 
               onClick={() => {
                 setAlertPopup(null);
@@ -140,7 +141,7 @@ const CropMonitor = () => {
               }} 
               className="w-full btn-danger flex items-center justify-center gap-2"
             >
-              <FiX /> समझ गया (OK)
+              <FiX /> {t("समझ गया (OK)", "Understood (OK)")}
             </button>
           </div>
         </div>
@@ -155,10 +156,10 @@ const CropMonitor = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="page-title flex items-center gap-2">
-                <GiWheat className="text-green-500" /> फसल मॉनिटरिंग Dashboard
+                <GiWheat className="text-green-500" /> {t("फसल मॉनिटरिंग Dashboard", "Crop Monitoring Dashboard")}
               </h1>
               <p className="page-subtitle">
-                रियल-टाइम फसल स्वास्थ्य — {farm.cropNameHi || farm.cropType} {farm.cropEmoji} • {farm.farmName}
+                {t("रियल-टाइम फसल स्वास्थ्य", "Real-time Crop Health")} — {t(farm.cropNameHi || farm.cropType, farm.cropType)} {farm.cropEmoji} • {farm.farmName}
               </p>
             </div>
             <div className="flex gap-2">
@@ -168,22 +169,22 @@ const CropMonitor = () => {
                 title="अलार्म टेस्ट करें"
               >
                 <FiAlertTriangle className="w-4 h-4" />
-                टेस्ट अलार्म
+                {t("टेस्ट अलार्म", "Test Alarm")}
               </button>
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
                 className={`btn-secondary text-sm flex items-center gap-2 ${soundEnabled ? 'text-green-600 bg-green-50 border-green-200' : 'text-gray-400'}`}
-                title="बारिश का अलार्म (Rain Alarm)"
+                title={t("बारिश का अलार्म (Rain Alarm)", "Rain Alarm")}
               >
                 {soundEnabled ? <FiBell className="w-4 h-4" /> : <FiX className="w-4 h-4" />}
-                अलार्म {soundEnabled ? 'ON' : 'OFF'}
+                {t("अलार्म", "Alarm")} {soundEnabled ? 'ON' : 'OFF'}
               </button>
               <button
                 onClick={() => { setAlertShown(false); fetchData(selectedFarmId); }}
                 disabled={refreshing}
                 className="btn-secondary flex items-center gap-2 text-sm"
               >
-                <FiRefreshCw className={refreshing ? "animate-spin" : ""} /> रिफ्रेश
+                <FiRefreshCw className={refreshing ? "animate-spin" : ""} /> {t("रिफ्रेश", "Refresh")}
               </button>
             </div>
           </div>
@@ -219,11 +220,10 @@ const CropMonitor = () => {
                 {rainAlert.alertLevel === "danger" ? "⛈️" : rainAlert.alertLevel === "warning" ? "🌧️" : "🌦️"}
               </span>
               <div className="flex-1">
-                <p className="font-bold">{rainAlert.alertMessageHi}</p>
-                <p className="text-sm opacity-80">{rainAlert.alertMessage}</p>
+                <p className="font-bold">{t(rainAlert.alertMessageHi, rainAlert.alertMessage)}</p>
               </div>
               <Link to="/rain-alert" className="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1">
-                विवरण <FiArrowRight />
+                {t("विवरण", "Details")} <FiArrowRight />
               </Link>
             </div>
           )}
@@ -238,9 +238,9 @@ const CropMonitor = () => {
               <div className="stat-number" style={{ color: healthColor }}>
                 {health.score}<span className="text-lg">/100</span>
               </div>
-              <div className="stat-label">स्वास्थ्य स्कोर</div>
+              <div className="stat-label">{t("स्वास्थ्य स्कोर", "Health Score")}</div>
               <div className="text-xs font-semibold mt-1" style={{ color: healthColor }}>
-                {health.statusHi}
+                {t(health.statusHi, health.statusEn || health.statusHi)}
               </div>
             </div>
 
@@ -249,23 +249,23 @@ const CropMonitor = () => {
               <div className="stat-number text-3xl text-amber-600">
                 {harvest.isHarvested ? "✓" : harvest.daysRemaining}
               </div>
-              <div className="stat-label">{harvest.isHarvested ? "कटाई हो गई" : "दिन बाकी"}</div>
+              <div className="stat-label">{harvest.isHarvested ? t("कटाई हो गई", "Harvested") : t("दिन बाकी", "Days Left")}</div>
               <div className="text-xs text-gray-400 mt-1">
-                {harvest.isHarvested ? "Harvested" : `${growth.progress}% पूरा`}
+                {harvest.isHarvested ? t("Harvested", "Harvested") : `${growth.progress}% ${t("पूरा", "Done")}`}
               </div>
             </div>
 
             <div className="stat-card">
               <FiDroplet className={['w-6 h-6', wc.icon].join(' ')} />
               <div className={['stat-number text-2xl', wc.text].join(' ')}>{water.status}</div>
-              <div className="stat-label">सिंचाई स्थिति</div>
-              <div className="text-xs text-gray-400 mt-1">नमी: {soil.moisture}%</div>
+              <div className="stat-label">{t("सिंचाई स्थिति", "Irrigation Status")}</div>
+              <div className="text-xs text-gray-400 mt-1">{t("नमी", "Moisture")}: {soil.moisture}%</div>
             </div>
 
             <div className="stat-card">
               <FiThermometer className={['w-6 h-6', tc.icon].join(' ')} />
               <div className={['stat-number text-2xl', tc.text].join(' ')}>{weather.temperature}°C</div>
-              <div className="stat-label">तापमान</div>
+              <div className="stat-label">{t("तापमान", "Temperature")}</div>
               <div className="text-xs text-gray-400 mt-1 truncate" title={temperature.messageEn}>
                 {temperature.messageEn}
               </div>
@@ -275,15 +275,15 @@ const CropMonitor = () => {
           <div className="grid lg:grid-cols-3 gap-5">
             <div className="lg:col-span-2 card">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FiActivity className="text-green-600" /> फसल विकास (Growth Timeline)
+                <FiActivity className="text-green-600" /> {t("फसल विकास (Growth Timeline)", "Crop Growth Timeline")}
               </h3>
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="font-medium text-gray-700">
-                    {growth.currentStage?.nameHi || growth.currentStage?.name}
+                    {t(growth.currentStage?.nameHi || growth.currentStage?.name, growth.currentStage?.name)}
                   </span>
                   <span className="text-gray-500">
-                    {growth.daysElapsed} / {growth.totalDays} दिन
+                    {growth.daysElapsed} / {growth.totalDays} {t("दिन", "days")}
                   </span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
@@ -293,9 +293,9 @@ const CropMonitor = () => {
                   />
                 </div>
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>बुवाई</span>
+                  <span>{t("बुवाई", "Sowing")}</span>
                   <span>{growth.progress}%</span>
-                  <span>कटाई</span>
+                  <span>{t("कटाई", "Harvest")}</span>
                 </div>
               </div>
 
@@ -312,7 +312,7 @@ const CropMonitor = () => {
                       ].join(" ")}
                     >
                       <div className="text-base mb-0.5">{stage.emoji || "🌱"}</div>
-                      <div className="font-medium truncate">{stage.nameHi || stage.name}</div>
+                      <div className="font-medium truncate">{t(stage.nameHi || stage.name, stage.name)}</div>
                       <div className="text-gray-400">{stage.startDay}-{stage.endDay}d</div>
                     </div>
                   );
@@ -323,14 +323,14 @@ const CropMonitor = () => {
                 <div className="mt-6 bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center gap-3">
                   <span className="text-3xl">🌾</span>
                   <div>
-                    <p className="font-semibold text-amber-800">संभावित कटाई की तारीख</p>
+                    <p className="font-semibold text-amber-800">{t("संभावित कटाई की तारीख", "Estimated Harvest Date")}</p>
                     <p className="text-amber-600 text-sm">
-                      {new Date(harvest.estimatedDate).toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" })}
+                      {new Date(harvest.estimatedDate).toLocaleDateString(t("hi-IN", "en-US"), { day: "numeric", month: "long", year: "numeric" })}
                     </p>
                   </div>
                   <div className="ml-auto text-right">
                     <p className="text-3xl font-bold text-amber-700">{harvest.daysRemaining}</p>
-                    <p className="text-xs text-amber-500 uppercase font-bold tracking-wider">दिन बाकी</p>
+                    <p className="text-xs text-amber-500 uppercase font-bold tracking-wider">{t("दिन बाकी", "Days Left")}</p>
                   </div>
                 </div>
               )}
@@ -338,34 +338,34 @@ const CropMonitor = () => {
 
             <div className="card">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FiThermometer className="text-orange-500" /> मौसम
+                <FiThermometer className="text-orange-500" /> {t("मौसम", "Weather")}
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-orange-50 rounded-xl">
                   <div className="flex items-center gap-2">
                     <FiThermometer className="text-orange-500" />
-                    <span className="text-sm text-gray-600">तापमान</span>
+                    <span className="text-sm text-gray-600">{t("तापमान", "Temp")}</span>
                   </div>
                   <span className="font-bold text-orange-700">{weather.temperature}°C</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
                   <div className="flex items-center gap-2">
                     <FiDroplet className="text-blue-500" />
-                    <span className="text-sm text-gray-600">नमी</span>
+                    <span className="text-sm text-gray-600">{t("नमी", "Humidity")}</span>
                   </div>
                   <span className="font-bold text-blue-700">{weather.humidity}%</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-sky-50 rounded-xl">
                   <div className="flex items-center gap-2">
                     <FiCloud className="text-sky-500" />
-                    <span className="text-sm text-gray-600">बारिश</span>
+                    <span className="text-sm text-gray-600">{t("बारिश", "Rain")}</span>
                   </div>
                   <span className="font-bold text-sky-700">{weather.rainChance}%</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                   <div className="flex items-center gap-2">
                     <FiWind className="text-gray-500" />
-                    <span className="text-sm text-gray-600">हवा</span>
+                    <span className="text-sm text-gray-600">{t("हवा", "Wind")}</span>
                   </div>
                   <span className="font-bold text-gray-700">{weather.windSpeed} km/h</span>
                 </div>
@@ -374,7 +374,7 @@ const CropMonitor = () => {
                 className="mt-3 p-3 rounded-xl border text-xs text-center"
                 style={{ borderColor: tc.border, backgroundColor: tc.bg }}
               >
-                <p className="font-medium" style={{ color: tc.border }}>{temperature.messageHi}</p>
+                <p className="font-medium" style={{ color: tc.border }}>{t(temperature.messageHi, temperature.messageEn)}</p>
               </div>
             </div>
           </div>
@@ -382,7 +382,7 @@ const CropMonitor = () => {
           <div className="grid md:grid-cols-3 gap-5 mb-6">
             <div className="card">
               <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <FiDroplet className="text-blue-500" /> सिंचाई
+                <FiDroplet className="text-blue-500" /> {t("सिंचाई", "Irrigation")}
               </h3>
               <div className={['text-center py-4 rounded-xl mb-3', wc.bg].join(' ')}>
                 <div className="text-4xl mb-1">
@@ -390,16 +390,16 @@ const CropMonitor = () => {
                 </div>
                 <p className={['font-bold text-lg', wc.text].join(' ')}>{water.status}</p>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{water.messageHi}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{t(water.messageHi, water.messageEn || water.messageHi)}</p>
               {water.litersPerAcre > 0 && (
                 <div className="mt-3 bg-blue-50 rounded-xl p-3 text-center">
                   <p className="text-2xl font-bold text-blue-700">{water.litersPerAcre}</p>
-                  <p className="text-xs text-blue-500">लीटर / एकड़ चाहिए</p>
+                  <p className="text-xs text-blue-500">{t("लीटर / एकड़ चाहिए", "Liters / Acre Needed")}</p>
                 </div>
               )}
               <div className="mt-4">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>मिट्टी नमी</span>
+                  <span>{t("मिट्टी नमी", "Soil Moisture")}</span>
                   <span>{soil.moisture}%</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
@@ -413,13 +413,13 @@ const CropMonitor = () => {
                 </div>
                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                   <span>0%</span>
-                  <span>इष्टतम: {water.optimalRange?.min}-{water.optimalRange?.max}%</span>
+                  <span>{t("इष्टतम", "Optimal")}: {water.optimalRange?.min}-{water.optimalRange?.max}%</span>
                   <span>100%</span>
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-sm bg-blue-50/50 px-3 py-2 rounded-lg">
-                  <span className="font-medium text-gray-700">💧 अगली सिंचाई (अनुमानित):</span>
+                  <span className="font-medium text-gray-700">💧 {t("अगली सिंचाई (अनुमानित):", "Next Irrigation (Est):")}</span>
                   <span className="font-bold text-blue-700">
-                    {water.nextIrrigationDays > 0 ? `${water.nextIrrigationDays} दिन बाद` : 'आज ही'}
+                    {water.nextIrrigationDays > 0 ? `${water.nextIrrigationDays} ${t("दिन बाद", "days later")}` : t('आज ही', 'Today')}
                   </span>
                 </div>
               </div>
@@ -427,7 +427,7 @@ const CropMonitor = () => {
 
             <div className="card">
               <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <GiPlantRoots className="text-purple-500" /> कीटनाशक शेड्यूल
+                <GiPlantRoots className="text-purple-500" /> {t("कीटनाशक शेड्यूल", "Pesticide Schedule")}
               </h3>
               <div
                 className={[
@@ -444,10 +444,10 @@ const CropMonitor = () => {
                     pesticide.urgency === "critical" ? "text-red-600" : pesticide.urgency === "high" ? "text-orange-600" : "text-green-600"
                   ].join(' ')}
                 >
-                  {pesticide.needed ? "जरूरी है" : "अभी नहीं"}
+                  {pesticide.needed ? t("जरूरी है", "Needed") : t("अभी नहीं", "Not Needed")}
                 </p>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">{pesticide.messageHi}</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">{t(pesticide.messageHi, pesticide.messageEn || pesticide.messageHi)}</p>
               <div className="space-y-2">
                 {pesticide.upcoming?.slice(0, 3).map((s, i) => (
                   <div
@@ -457,9 +457,9 @@ const CropMonitor = () => {
                       s.daysUntil <= 7 ? "bg-orange-50 border border-orange-100" : "bg-gray-50"
                     ].join(" ")}
                   >
-                    <span className="font-medium">{s.nameHi || s.type}</span>
+                    <span className="font-medium">{t(s.nameHi || s.type, s.type)}</span>
                     <span className={s.daysUntil <= 7 ? "text-orange-600 font-bold" : "text-gray-500"}>
-                      {s.daysUntil} दिन
+                      {s.daysUntil} {t("दिन", "days")}
                     </span>
                   </div>
                 ))}
@@ -468,12 +468,12 @@ const CropMonitor = () => {
 
             <div className="card">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FiDroplet className="text-teal-500" /> मिट्टी NPK
+                <FiDroplet className="text-teal-500" /> {t("मिट्टी NPK", "Soil NPK")}
               </h3>
               {[
-                { label: "नाइट्रोजन (N)", val: soil.nitrogen, max: 80, color: "#22c55e" },
-                { label: "फास्फोरस (P)", val: soil.phosphorus, max: 50, color: "#3b82f6" },
-                { label: "पोटेशियम (K)", val: soil.potassium, max: 50, color: "#f59e0b" },
+                { label: t("नाइट्रोजन (N)", "Nitrogen (N)"), val: soil.nitrogen, max: 80, color: "#22c55e" },
+                { label: t("फास्फोरस (P)", "Phosphorus (P)"), val: soil.phosphorus, max: 50, color: "#3b82f6" },
+                { label: t("पोटेशियम (K)", "Potassium (K)"), val: soil.potassium, max: 50, color: "#f59e0b" },
                 { label: "pH", val: soil.pH, max: 14, color: "#8b5cf6" }
               ].map(({ label, val, max, color }) => (
                 <div key={label} className="mb-3">
@@ -491,7 +491,7 @@ const CropMonitor = () => {
               ))}
               {!soil.hasData && (
                 <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded-lg mt-4">
-                  ⚠️ डिफ़ॉल्ट मूल्य। <Link to="/soil-input" className="underline font-medium">असली डेटा डालें</Link>
+                  ⚠️ {t("डिफ़ॉल्ट मूल्य।", "Default Values.")} <Link to="/soil-input" className="underline font-medium">{t("असली डेटा डालें", "Enter Real Data")}</Link>
                 </p>
               )}
             </div>
@@ -499,7 +499,7 @@ const CropMonitor = () => {
 
           <div className="card mb-6">
             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FiAlertTriangle className="text-amber-500" /> निर्णय केंद्र (Decision Center)
+              <FiAlertTriangle className="text-amber-500" /> {t("निर्णय केंद्र (Decision Center)", "Decision Center")}
             </h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {decisions.map((dec, i) => {
@@ -509,11 +509,11 @@ const CropMonitor = () => {
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">{dec.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <p className={['font-bold text-sm', sevColors.text].join(' ')}>{dec.titleHi}</p>
-                        <p className="text-xs text-gray-600 mt-1 leading-relaxed">{dec.messageHi}</p>
+                        <p className={['font-bold text-sm', sevColors.text].join(' ')}>{t(dec.titleHi, dec.titleEn || dec.titleHi)}</p>
+                        <p className="text-xs text-gray-600 mt-1 leading-relaxed">{t(dec.messageHi, dec.messageEn || dec.messageHi)}</p>
                         {dec.severity === "critical" && (
                           <span className="inline-block mt-2 px-2 py-0.5 bg-red-600 text-white text-[10px] rounded-full font-bold uppercase tracking-wider animate-pulse">
-                            🚨 तुरंत कार्रवाई करें
+                            🚨 {t("तुरंत कार्रवाई करें", "Take Action Immediately")}
                           </span>
                         )}
                       </div>
@@ -527,7 +527,7 @@ const CropMonitor = () => {
           {rainAlert?.forecast7Day && (
             <div className="card">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FiCloud className="text-sky-500" /> 7-दिन मौसम पूर्वानुमान
+                <FiCloud className="text-sky-500" /> {t("7-दिन मौसम पूर्वानुमान", "7-Day Weather Forecast")}
               </h3>
               <div className="grid grid-cols-7 gap-2 overflow-x-auto pb-2">
                 {rainAlert.forecast7Day.map((day, i) => (
@@ -538,7 +538,7 @@ const CropMonitor = () => {
                       day.isRainDay ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-100"
                     ].join(" ")}
                   >
-                    <p className="font-bold text-gray-700 mb-1">{day.dayHi || day.day}</p>
+                    <p className="font-bold text-gray-700 mb-1">{t(day.dayHi || day.day, day.day)}</p>
                     <div className="text-xl mb-1">
                       {day.rainProbability >= 60 ? "🌧️" : day.rainProbability >= 35 ? "🌦️" : "☀️"}
                     </div>
@@ -554,7 +554,7 @@ const CropMonitor = () => {
           )}
 
           <p className="text-center text-xs text-gray-400 mt-6">
-            अंतिम अपडेट: {data.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString("hi-IN") : "अभी"} • हर 5 मिनट में रिफ्रेश होता है
+            {t("अंतिम अपडेट:", "Last Updated:")} {data.fetchedAt ? new Date(data.fetchedAt).toLocaleTimeString(t("hi-IN", "en-US")) : t("अभी", "Just now")} • {t("हर 5 मिनट में रिफ्रेश होता है", "Refreshes every 5 mins")}
           </p>
 
         </main>

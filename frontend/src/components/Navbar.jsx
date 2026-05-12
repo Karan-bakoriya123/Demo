@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   FiMenu, FiX, FiLogOut, FiUser, FiGrid,
 } from 'react-icons/fi';
@@ -11,6 +12,7 @@ import Sidebar from './Sidebar';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -49,6 +51,14 @@ const Navbar = () => {
                 <span className="text-sm font-semibold text-gray-800">{user.name}</span>
                 <span className="text-xs text-green-600 capitalize font-medium">{user.role}</span>
               </div>
+              <select 
+                className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl px-2 py-1 focus:ring-green-500 focus:border-green-500"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                <option value="hi">हिन्दी</option>
+                <option value="en">English</option>
+              </select>
               <Link to="/profile" id="navbar-profile-link" className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center hover:bg-green-200 transition-colors">
                 <FiUser className="w-4 h-4 text-green-700" />
               </Link>

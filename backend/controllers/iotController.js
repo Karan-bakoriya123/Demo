@@ -6,9 +6,17 @@ const Farm = require('../models/Farm');
 // @access  Public (or protected by simple API key in future)
 exports.updateStatus = async (req, res) => {
   try {
-    const { farmId, moistureLevel, motorStatus } = req.body;
+    const { farmId, moistureLevel, moisture, motorStatus } = req.body;
+    
+    // Use either moistureLevel or moisture (support both names)
+    const finalMoisture = moistureLevel !== undefined ? moistureLevel : moisture;
 
-    if (!farmId || moistureLevel === undefined || motorStatus === undefined) {
+    // Convert motorStatus string ("on"/"off") to Boolean for the database
+    const finalMotorStatus = typeof motorStatus === 'string' 
+      ? (motorStatus.toLowerCase() === 'on') 
+      : motorStatus;
+
+    if (!farmId || finalMoisture === undefined || motorStatus === undefined) {
       return res.status(400).json({ success: false, message: 'Please provide all fields' });
     }
 
@@ -20,8 +28,8 @@ exports.updateStatus = async (req, res) => {
 
     const status = await IoTStatus.create({
       farmId,
-      moistureLevel,
-      motorStatus,
+      moistureLevel: finalMoisture,
+      motorStatus: finalMotorStatus,
     });
 
     res.status(201).json({
