@@ -53,7 +53,7 @@ const computeGrowthStage = (cropData, plantingDate) => {
 /**
  * Compute water requirements
  */
-const computeWaterNeed = (cropData, soilMoisture, weather, growthStage) => {
+const computeWaterNeed = (cropData, soilMoisture, weather, growthStage, motorActive = false) => {
   const stageWaterMap = { low: 0.6, moderate: 1.0, high: 1.4, very_high: 1.8 };
   const stageMultiplier = stageWaterMap[growthStage.currentStage?.waterNeed] || 1.0;
   const dailyNeed = Math.round(cropData.waterPerDay * stageMultiplier * 10) / 10;
@@ -76,7 +76,13 @@ const computeWaterNeed = (cropData, soilMoisture, weather, growthStage) => {
     deficit = optMinMoisture - soilMoisture;
   }
 
-  if (rainChance > 60 || soilMoisture > optMaxMoisture) {
+  // ── Motor/Pump is currently ON (Irrigating) ──────────────────────────────
+  if (motorActive) {
+    status = 'Irrigating';
+    urgency = 'irrigating';
+    messageHi = `💧 पंप चल रहा है। मिट्टी की नमी: ${soilMoisture}%। सिंचाई जारी है।`;
+    messageEn = `💧 Pump is ON. Soil moisture: ${soilMoisture}%. Irrigation in progress.`;
+  } else if (rainChance > 60 || soilMoisture > optMaxMoisture) {
     status = 'Not Required';
     urgency = 'none';
     messageHi = soilMoisture > optMaxMoisture
@@ -115,6 +121,7 @@ const computeWaterNeed = (cropData, soilMoisture, weather, growthStage) => {
   return {
     status,
     urgency,
+    motorActive,
     deficit: Math.round(deficit),
     dailyNeed,
     litersPerAcre,
@@ -125,6 +132,8 @@ const computeWaterNeed = (cropData, soilMoisture, weather, growthStage) => {
     messageEn,
   };
 };
+
+
 
 /**
  * Compute pesticide schedule

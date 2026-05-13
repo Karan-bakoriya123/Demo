@@ -1,5 +1,6 @@
 const Farm = require('../models/Farm');
 const SoilData = require('../models/SoilData');
+const IoTStatus = require('../models/IoTStatus');
 const FarmActivity = require('../models/FarmActivity');
 const axios = require('axios');
 const { getCropData } = require('../utils/cropDatabase');
@@ -57,10 +58,38 @@ const getCropMonitor = async (req, res) => {
       return res.status(404).json({ message: 'No farm found. Please add a farm first.' });
     }
 
-    // Get latest soil data for this farm
-    const soilData = await SoilData.findOne({ farmId: farm._id }).sort({ createdAt: -1 });
+    // ── Get latest IoT (real-time) data from ESP8266 ──────────────────────
+    const iotData = await IoTStatus.findOne({ farmId: farm._id }).sort({ createdAt: -1 });
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);   // pump data every 1s
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);  // display freshness
+    const isIotFresh = iotData && new Date(iotData.createdAt) > twoMinutesAgo;
+    const isIotRecent = iotData && new Date(iotData.createdAt) > tenMinutesAgo;
+
+    // ── Get latest manual soil data ──────────────────────────────────────
+    const soilData = await SoilData.findOne({ farmId: farm._id }).sort({ createdAt: -1 }).lean();
     const defaultSoil = { soilMoisture: 50, soilPH: 6.5, nitrogen: 30, phosphorus: 20, potassium: 20 };
-    const soil = soilData || defaultSoil;
+    const manualSoil = soilData || defaultSoil;
+
+    // Priority: IoT (fresh) > Manual SoilData > Default
+    // This ensures only moisture is overridden by ESP8266, rest of NPK/pH remains manual!
+    const soil = {
+      ...manualSoil,
+      soilMoisture: isIotFresh ? iotData.moistureLevel : manualSoil.soilMoisture,
+    };
+
+    // Motor/pump status from IoT
+    const motorActive = isIotFresh ? iotData.motorStatus : false;
+    const soilSource = isIotFresh ? 'iot' : (isIotRecent ? 'iot_stale' : (soilData ? 'manual' : 'default'));
+    const iotLastUpdated = iotData ? iotData.createdAt : null;
+
+    // ── Check last auto-logged irrigation (from IoT pump off event) ───────
+    const lastIoTIrrigation = await FarmActivity.findOne({
+      farmId: farm._id,
+      activityType: 'Irrigation',
+      notes: { $regex: 'IoT Auto' },
+    }).sort({ createdAt: -1 });
+    const lastIrrigatedAt = lastIoTIrrigation ? lastIoTIrrigation.createdAt : null;
+
 
     // Get crop knowledge
     const cropData = getCropData(farm.cropType);
@@ -168,7 +197,7 @@ const getCropMonitor = async (req, res) => {
 
     // Compute all metrics
     const tempImpact = computeTempImpact(cropData, weather.temperature);
-    const waterNeed = computeWaterNeed(cropData, soil.soilMoisture, weather, growthStage);
+    const waterNeed = computeWaterNeed(cropData, soil.soilMoisture, weather, growthStage, motorActive);
     const recentActivities = await FarmActivity.find({ farmId: farm._id }).sort({ createdAt: -1 }).limit(10);
     const pesticideNeed = computePesticideNeed(cropData, plantingDate, growthStage.daysElapsed, recentActivities);
     const cropHealth = computeCropHealth(cropData, soil, weather, growthStage, waterNeed, tempImpact);
@@ -211,6 +240,15 @@ const getCropMonitor = async (req, res) => {
         phosphorus: soil.phosphorus,
         potassium: soil.potassium,
         hasData: !!soilData,
+        source: soilSource,
+      },
+      iot: {
+        active: isIotFresh,
+        recent: isIotRecent,
+        motorOn: motorActive,
+        lastUpdated: iotLastUpdated,
+        moistureLevel: (isIotFresh || isIotRecent) ? iotData?.moistureLevel : null,
+        lastIrrigatedAt: lastIrrigatedAt,
       },
       decisions,
       fetchedAt: new Date().toISOString(),

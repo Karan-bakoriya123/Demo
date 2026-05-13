@@ -25,10 +25,11 @@ const alertBgMap = {
 };
 
 const WaterColors = {
-  critical: { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' },
-  high:     { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' },
-  none:     { bg: 'bg-green-50', text: 'text-green-600', icon: 'text-green-500' },
-  low:      { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'text-blue-500' },
+  critical:   { bg: 'bg-red-50', text: 'text-red-600', icon: 'text-red-500' },
+  high:       { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'text-orange-500' },
+  none:       { bg: 'bg-green-50', text: 'text-green-600', icon: 'text-green-500' },
+  low:        { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'text-blue-500' },
+  irrigating: { bg: 'bg-cyan-50', text: 'text-cyan-600', icon: 'text-cyan-500' },
 };
 
 const TempColors = {
@@ -73,7 +74,8 @@ const CropMonitor = () => {
 
   useEffect(() => {
     fetchData(selectedFarmId);
-    intervalRef.current = setInterval(() => fetchData(selectedFarmId, true), 5 * 60 * 1000);
+    // Real-time: refresh every 30 seconds when IoT is active
+    intervalRef.current = setInterval(() => fetchData(selectedFarmId, true), 30 * 1000);
     return () => clearInterval(intervalRef.current);
   }, [selectedFarmId, fetchData]);
 
@@ -161,6 +163,20 @@ const CropMonitor = () => {
               <p className="page-subtitle">
                 {t("रियल-टाइम फसल स्वास्थ्य", "Real-time Crop Health")} — {t(farm.cropNameHi || farm.cropType, farm.cropType)} {farm.cropEmoji} • {farm.farmName}
               </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="text-xs text-gray-500 font-medium">Farm ID: <span className="text-gray-900 bg-gray-100 px-2 py-0.5 rounded font-mono border border-gray-200">{farm._id}</span></span>
+                <button 
+                  onClick={() => { navigator.clipboard.writeText(farm._id); toast.success(t('Farm ID कॉपी हो गया!', 'Farm ID Copied!')); }}
+                  className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded font-bold"
+                >
+                  {t("कॉपी करें", "Copy")}
+                </button>
+                {data?.iot?.active && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-cyan-700 bg-cyan-50 border border-cyan-200 px-2 py-0.5 rounded-full animate-pulse">
+                    🛰️ Live IoT
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <button
@@ -257,19 +273,83 @@ const CropMonitor = () => {
 
             <div className="stat-card">
               <FiDroplet className={['w-6 h-6', wc.icon].join(' ')} />
-              <div className={['stat-number text-2xl', wc.text].join(' ')}>{water.status}</div>
+              <div className={['stat-number text-2xl', wc.text].join(' ')}>{t(
+                water.status === 'Irrigating' ? 'सिंचाई हो रही है' :
+                water.status === 'Not Required' ? 'जरूरत नहीं' :
+                water.status === 'Required' ? 'जरूरी है' :
+                water.status === 'Critical' ? 'तत्काल करें' : water.status,
+                water.status
+              )}</div>
               <div className="stat-label">{t("सिंचाई स्थिति", "Irrigation Status")}</div>
               <div className="text-xs text-gray-400 mt-1">{t("नमी", "Moisture")}: {soil.moisture}%</div>
             </div>
 
-            <div className="stat-card">
-              <FiThermometer className={['w-6 h-6', tc.icon].join(' ')} />
-              <div className={['stat-number text-2xl', tc.text].join(' ')}>{weather.temperature}°C</div>
-              <div className="stat-label">{t("तापमान", "Temperature")}</div>
-              <div className="text-xs text-gray-400 mt-1 truncate" title={temperature.messageEn}>
-                {temperature.messageEn}
-              </div>
-            </div>
+            {/* Motor / Pump Status Card (IoT) - Smart States */}
+            {(() => {
+              const iot = data?.iot;
+              const motorOn = iot?.motorOn;
+              const isActive = iot?.active;
+              const isRecent = iot?.recent;
+              const lastIrrAt = iot?.lastIrrigatedAt;
+              
+              // Time since last irrigation
+              const minsAgo = lastIrrAt 
+                ? Math.floor((Date.now() - new Date(lastIrrAt)) / 60000)
+                : null;
+              const timeLabel = minsAgo !== null
+                ? (minsAgo < 1 ? t('अभी', 'just now') 
+                  : minsAgo < 60 ? `${minsAgo} ${t('मिनट पहले', 'min ago')}` 
+                  : `${Math.floor(minsAgo/60)} ${t('घंटे पहले', 'hr ago')}`)
+                : null;
+
+              // Determine card state
+              let cardClass = 'stat-card border-2 ';
+              let icon = '⛽';
+              let labelColor = 'text-gray-400';
+              let label = t('IoT बंद', 'No IoT');
+              let subText = t('हार्डवेयर ऑफलाइन', 'Hardware offline');
+
+              if (motorOn && isActive) {
+                // PUMP IS ON - Irrigating NOW
+                cardClass += 'border-cyan-400 bg-cyan-50';
+                icon = '🚰';
+                labelColor = 'text-cyan-600';
+                label = t('🚰 पंप चालू!', '🚰 Pump ON!');
+                subText = `🛰️ ${t('सिंचाई हो रही है', 'Irrigating')} • ${soil.moisture}%`;
+              } else if (!motorOn && isActive && lastIrrAt && minsAgo < 120) {
+                // PUMP JUST TURNED OFF - Recently irrigated
+                cardClass += 'border-green-300 bg-green-50';
+                icon = '✅';
+                labelColor = 'text-green-600';
+                label = t('सिंचाई पूरी!', 'Irrigated!');
+                subText = `${t('पूरी हुई', 'Done')} ${timeLabel}`;
+              } else if (!motorOn && (isActive || isRecent)) {
+                // PUMP OFF - Waiting
+                cardClass += 'border-gray-200';
+                icon = '💤';
+                labelColor = 'text-gray-500';
+                label = t('पंप बंद', 'Pump OFF');
+                subText = `🛰️ ${t('लाइव', 'Live')} • ${soil.moisture}% ${t('नमी', 'moisture')}`;
+              } else if (lastIrrAt) {
+                // No live IoT but has history
+                cardClass += 'border-gray-100';
+                icon = '🕐';
+                labelColor = 'text-gray-400';
+                label = t('अंतिम सिंचाई', 'Last Irrigation');
+                subText = timeLabel || '-';
+              } else {
+                cardClass += 'border-gray-100';
+              }
+
+              return (
+                <div className={cardClass}>
+                  <div className="text-2xl">{icon}</div>
+                  <div className={`stat-number text-xl font-bold ${labelColor}`}>{label}</div>
+                  <div className="stat-label">{t("पंप स्थिति", "Pump Status")}</div>
+                  <div className="text-xs text-gray-400 mt-1">{subText}</div>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="grid lg:grid-cols-3 gap-5">
