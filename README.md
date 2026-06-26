@@ -188,3 +188,4 @@ Rule-based engine in `backend/utils/assistantEngine.js`:
 
 Built with ❤️ for Indian farmers.
 
+hello how are you i thing your are greate
