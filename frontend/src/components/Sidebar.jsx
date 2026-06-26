@@ -11,6 +11,7 @@ const farmerLinks = [
   { to: '/dashboard', icon: FiGrid, label: 'Dashboard' },
   { to: '/crop-monitor', icon: FiActivity, label: '🌿 Crop Monitor' },
   { to: '/add-farm', icon: FiPlus, label: 'Add Farm' },
+  { to: '/add-irrigation', icon: FiDroplet, label: 'Add Irrigation' },
   { to: '/soil-input', icon: GiPlantRoots, label: 'Soil Data' },
   { to: '/weather', icon: FiCloud, label: 'Weather' },
   { to: '/rain-alert', icon: FiAlertTriangle, label: 'Rain Alert 🌧️' },

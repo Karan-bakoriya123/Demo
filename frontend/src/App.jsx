@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AddFarm from './pages/AddFarm';
+import AddIrrigation from './pages/AddIrrigation';
 import SoilInput from './pages/SoilInput';
 import Weather from './pages/Weather';
 import Assistant from './pages/Assistant';
@@ -56,6 +57,7 @@ function App() {
           {/* Farmer Protected */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/add-farm" element={<ProtectedRoute><AddFarm /></ProtectedRoute>} />
+          <Route path="/add-irrigation" element={<ProtectedRoute><AddIrrigation /></ProtectedRoute>} />
           <Route path="/soil-input" element={<ProtectedRoute><SoilInput /></ProtectedRoute>} />
           <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
           <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
