@@ -62,7 +62,7 @@ const Landing = () => {
             <div className="w-8 h-8 bg-agri-gradient rounded-xl flex items-center justify-center shadow-sm">
               <GiPlantRoots className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-bold text-gray-900">Smart Agri AI</span>
+            <span className="font-display font-bold text-gray-900">FarmSense</span>
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login" id="landing-login-btn" className="btn-secondary text-sm py-2 px-4">Login</Link>
@@ -84,7 +84,7 @@ const Landing = () => {
             <span className="text-gradient block">AI-Powered Insights</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Smart Agri AI Assistant helps farmers make data-driven decisions about irrigation, soil health, and crop management — all in simple, farmer-friendly language.
+            FarmSense helps farmers make data-driven decisions about irrigation, soil health, and crop management — all in simple, farmer-friendly language.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/register" id="hero-start-btn" className="btn-primary text-base px-8 py-3.5 flex items-center justify-center gap-2 group">
@@ -142,13 +142,13 @@ const Landing = () => {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { step: '1', title: 'Register', desc: 'Create your farmer account in seconds.', icon: FiShield },
-              { step: '2', title: 'Add Farm', desc: 'Enter your farm and crop details.', icon: GiWheat },
-              { step: '3', title: 'Enter Soil Data', desc: 'Input soil moisture, pH, and nutrient levels.', icon: GiPlantRoots },
-              { step: '4', title: 'Get AI Advice', desc: 'Receive instant irrigation and health recommendations.', icon: FiMessageCircle },
+              { step: '1', title: 'Register', desc: 'Create your farmer account in seconds.', icon: FiShield, color: 'from-green-500 to-emerald-500' },
+              { step: '2', title: 'Add Farm', desc: 'Enter your farm location, crop type, and field size.', icon: GiWheat, color: 'from-lime-500 to-green-500' },
+              { step: '3', title: 'Soil Scanner', desc: 'Camera se mitti scan karo — AI soil color, NPK, pH predict karega aur best fasalein batayega.', icon: GiPlantRoots, color: 'from-amber-500 to-orange-500' },
+              { step: '4', title: 'Get AI Advice', desc: 'AI fasal recommend karega. Assistant se seedha poocho — chane, gehu, ya soyabin ke baare mein.', icon: FiMessageCircle, color: 'from-purple-500 to-violet-500' },
             ].map((item) => (
               <div key={item.step} className="card text-center group hover:shadow-md transition-shadow">
-                <div className="w-10 h-10 bg-agri-gradient rounded-xl flex items-center justify-center text-white font-bold text-lg mx-auto mb-3 shadow-sm">
+                <div className={`w-10 h-10 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center text-white font-bold text-lg mx-auto mb-3 shadow-sm`}>
                   {item.step}
                 </div>
                 <h3 className="font-display font-semibold text-gray-900 mb-2">{item.title}</h3>
@@ -192,7 +192,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="py-8 bg-gray-900 text-center">
-        <p className="text-gray-400 text-sm">© 2025 Smart Agri AI Assistant. Built for the future of farming.</p>
+        <p className="text-gray-400 text-sm">© 2025 FarmSense. Built for the future of farming.</p>
       </footer>
     </div>
   );

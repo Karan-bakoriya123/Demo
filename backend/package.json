@@ -1,7 +1,7 @@
 {
   "name": "smart-agri-backend",
   "version": "1.0.0",
-  "description": "Smart Agri AI Assistant - Backend API",
+  "description": "FarmSense - Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

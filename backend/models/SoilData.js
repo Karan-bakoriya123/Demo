@@ -39,6 +39,14 @@ const soilDataSchema = new mongoose.Schema(
       required: [true, 'Potassium level is required'],
       min: 0,
     },
+    soilColor: {
+      type: String,
+      default: '',
+    },
+    recommendedCrops: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );

@@ -40,7 +40,7 @@ const Navbar = () => {
               <div className="w-8 h-8 bg-agri-gradient rounded-xl flex items-center justify-center shadow-sm">
                 <GiPlantRoots className="w-5 h-5 text-white" />
               </div>
-              <span className="font-display font-bold text-gray-900 hidden sm:block">Smart Agri AI</span>
+              <span className="font-display font-bold text-gray-900 hidden sm:block">FarmSense</span>
             </Link>
           </div>
 
@@ -90,7 +90,7 @@ const Navbar = () => {
                 <div className="w-8 h-8 bg-agri-gradient rounded-xl flex items-center justify-center">
                   <GiPlantRoots className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-display font-bold text-gray-900">Smart Agri AI</span>
+                <span className="font-display font-bold text-gray-900">FarmSense</span>
               </div>
               <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl hover:bg-gray-100">
                 <FiX className="w-5 h-5 text-gray-500" />

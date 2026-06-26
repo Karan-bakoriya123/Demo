@@ -1,4 +1,4 @@
-# 🌱 Smart Agri AI Assistant
+# 🌱 FarmSense
 
 A full-stack AI-powered Precision Agriculture web application that helps farmers monitor crop health and get smart irrigation recommendations using real-time weather data, soil inputs, and an AI assistant.
 

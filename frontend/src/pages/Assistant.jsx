@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { FiSend, FiRefreshCw } from 'react-icons/fi';
+import { FiSend, FiRefreshCw, FiMic, FiMicOff } from 'react-icons/fi';
 import { GiPlantRoots } from 'react-icons/gi';
 
 const Slider = ({ name, label, min, max, step = 1, unit, form, handleSlider }) => {
@@ -25,13 +25,84 @@ const Assistant = () => {
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello! I am your Smart Agri AI Assistant. 🌱 You can either use the sliders to analyze your farm data or just type your question below.' },
+    { role: 'assistant', text: 'Hello! I am your FarmSense Assistant. 🌱 You can either use the sliders to analyze your farm data or just type your question below.' },
   ]);
   const [form, setForm] = useState({ soilMoisture: 40, soilPH: 6.5, temperature: 28, humidity: 60, rainChance: 20, fieldSize: 5 });
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(true);
+  const [isListening, setIsListening] = useState(false);
   const bottomRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const transcriptRef = useRef('');
+
+  // Stop speech on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+      if (recognitionRef.current) recognitionRef.current.stop();
+    };
+  }, []);
+
+  const speakText = (text) => {
+    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'hi-IN'; // Speak in Hindi
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.lang = 'hi-IN'; // Hindi support by default
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        setUserInput(transcript);
+        transcriptRef.current = transcript;
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') toast.error("माइक्रोफोन का एक्सेस दें (Allow Mic)");
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+        if (transcriptRef.current.trim().length > 0) {
+          handleAnalyze(null, transcriptRef.current);
+          transcriptRef.current = ''; // clear ref after auto-submit
+        }
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      return toast.error("आपका ब्राउज़र वॉइस इनपुट सपोर्ट नहीं करता (Browser not supported).");
+    }
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        setUserInput('');
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast.success("बोलना शुरू करें... (Listening)");
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   useEffect(() => {
     api.get('/farms').then(({ data }) => {
@@ -46,12 +117,13 @@ const Assistant = () => {
 
   const handleSlider = (e) => setForm({ ...form, [e.target.name]: Number(e.target.value) });
 
-  const handleAnalyze = async (e) => {
+  const handleAnalyze = async (e, overrideText = null) => {
     if (e) e.preventDefault();
-    if (!selectedFarm && !userInput) return toast.error('Please select a farm or type a question');
+    
+    let queryText = overrideText || userInput;
+    if (!selectedFarm && !queryText) return toast.error('Please select a farm or type a question');
     
     setLoading(true);
-    let queryText = userInput;
     
     if (!queryText) {
       queryText = `Analyze my ${selectedFarm?.cropType || 'crop'}: Moisture ${form.soilMoisture}%, pH ${form.soilPH}, Temp ${form.temperature}°C.`;
@@ -69,15 +141,19 @@ const Assistant = () => {
         text: queryText
       });
       setMessages((prev) => [...prev, { role: 'assistant', text: data.message }]);
+      speakText(data.message);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: 'assistant', text: 'I am here to help! Please provide your soil and weather details for a specific analysis.' }]);
+      const fallbackMsg = 'I am here to help! Please provide your soil and weather details for a specific analysis.';
+      setMessages((prev) => [...prev, { role: 'assistant', text: fallbackMsg }]);
+      speakText(fallbackMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleReset = () => {
-    setMessages([{ role: 'assistant', text: 'Hello! I am your Smart Agri AI Assistant. 🌱 How can I help you today?' }]);
+    window.speechSynthesis.cancel();
+    setMessages([{ role: 'assistant', text: 'Hello! I am your FarmSense Assistant. 🌱 How can I help you today?' }]);
     setShowForm(true);
     setUserInput('');
   };
@@ -163,9 +239,12 @@ const Assistant = () => {
                     type="text"
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    placeholder={showForm ? "Or type your question here..." : "Type your question..."}
+                    placeholder={showForm ? "Or type your question here..." : isListening ? "Listening..." : "Type your question..."}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all outline-none text-sm"
                   />
+                  <button type="button" onClick={toggleListening} className={`flex items-center justify-center px-4 rounded-xl transition-all ${isListening ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {isListening ? <FiMicOff className="w-5 h-5 animate-pulse" /> : <FiMic className="w-5 h-5" />}
+                  </button>
                   <button type="submit" disabled={loading || (!userInput && !showForm)} className="btn-primary flex items-center justify-center px-4">
                     <FiSend className="w-4 h-4" />
                   </button>

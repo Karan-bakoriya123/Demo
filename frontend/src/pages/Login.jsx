@@ -44,7 +44,7 @@ const Login = () => {
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
               <GiPlantRoots className="w-6 h-6 text-white" />
             </div>
-            <span className="font-display font-bold text-white text-xl">Smart Agri AI</span>
+            <span className="font-display font-bold text-white text-xl">FarmSense</span>
           </div>
           <h2 className="text-4xl font-display font-bold text-white leading-tight mb-4">
             Welcome back, Farmer!
@@ -76,7 +76,7 @@ const Login = () => {
             <div className="w-8 h-8 bg-agri-gradient rounded-xl flex items-center justify-center">
               <GiPlantRoots className="w-5 h-5 text-white" />
             </div>
-            <span className="font-display font-bold text-gray-900">Smart Agri AI</span>
+            <span className="font-display font-bold text-gray-900">FarmSense</span>
           </div>
 
           <div className="mb-8">
