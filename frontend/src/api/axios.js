@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.PROD 
-    ? import.meta.env.VITE_API_URL || 'https://agricultureai-5nr9.onrender.com/api' 
+    ? import.meta.env.VITE_API_URL || 'https://demo-hazel-beta-16.vercel.app/api' 
     : 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',

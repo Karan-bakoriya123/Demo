@@ -34,7 +34,7 @@ app.use((req, res, next) => {
 // Non-blocking DB Connection
 connectDB().then(() => {
   seedAdmin().catch(err => console.error('Seed error:', err));
-});
+}).catch(err => console.error('Initial DB Connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -52,8 +52,9 @@ app.get('/', (req, res) => {
   res.json({ message: '🌱 API is Live!', version: '1.2.0' });
 });
 
+// For Vercel Serverless, we export the app. For local development, we start the server.
 const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });

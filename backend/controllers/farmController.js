@@ -23,7 +23,20 @@ const createFarm = async (req, res) => {
       plantingDate: plantingDate ? new Date(plantingDate) : new Date(),
     });
 
-    res.status(201).json({ message: 'Farm created successfully', farm });
+    // Automatically generate realistic default Soil Data for the new farm
+    const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const autoSoilData = await SoilData.create({
+      userId: req.user._id,
+      farmId: farm._id,
+      soilMoisture: getRandom(40, 80), // Moisture between 40% - 80%
+      soilPH: parseFloat((Math.random() * (7.5 - 5.5) + 5.5).toFixed(1)), // pH between 5.5 - 7.5
+      nitrogen: getRandom(30, 100), 
+      phosphorus: getRandom(15, 60),
+      potassium: getRandom(50, 200),
+      soilColor: 'Brown',
+    });
+
+    res.status(201).json({ message: 'Farm and Initial Soil Data created successfully', farm, soilData: autoSoilData });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
